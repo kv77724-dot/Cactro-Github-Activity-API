@@ -3,6 +3,7 @@ const AppError = require("../utils/appError");
 const {
   usernameSchema,
   repoSchema,
+  issueSchema,
 } = require("../validations/githubValidations");
 
 const GITHUB_API_URL = `https://api.github.com/users/{GITHUB_USERNAME}`;
@@ -61,11 +62,11 @@ const handleGetUserAndProjectData = async (query) => {
   }
 };
 
-const handleGetRepositoryData = async (body, params) => {
+const handleGetRepositoryData = async (query, params) => {
   const { repoName } = params;
-  const { username } = body;
+  const { username } = query;
 
-  const { error } = repoSchema.validate({ repoName });
+  const { error } = repoSchema.validate({ repoName, username });
 
   if (error) {
     throw new AppError(error.details[0]?.message, "VALIDATION_ERROR", 400);
@@ -104,4 +105,52 @@ const handleGetRepositoryData = async (body, params) => {
   }
 };
 
-module.exports = { handleGetUserAndProjectData, handleGetRepositoryData };
+const handleCreateIssueInRepository = async (body, params, query) => {
+  const { repoName } = params;
+  const { title, body: issueBody } = body;
+  const { username } = query;
+
+  const { error } = issueSchema.validate({
+    repoName,
+    username,
+    title,
+    body: issueBody,
+  });
+
+  if (error) {
+    throw new AppError(error.details[0]?.message, "VALIDATION_ERROR", 400);
+  }
+
+  try {
+    const response = await axios.post(
+      `https://api.github.com/repos/${username}/${repoName}/issues`,
+      { title, body: issueBody },
+      {
+        headers: {
+          Authorization: `token ${process.env.GITHUB_TOKEN}`,
+          Accept: "application/vnd.github.v3+json",
+        },
+      }
+    );
+
+    return { issue_url: response.data.html_url };
+  } catch (err) {
+    if (err.response && err.response.status === 404) {
+      throw new AppError("Repository not found!", "INVALID_INPUT", 404);
+    } else if (err.response && err.response.status === 401) {
+      throw new AppError(
+        "Unauthorized: Check your GitHub Token",
+        "UNAUTORIZED",
+        401
+      );
+    } else {
+      throw new AppError("Something went wrong!", "INTERNAL_SERVER_ERROR", 500);
+    }
+  }
+};
+
+module.exports = {
+  handleGetUserAndProjectData,
+  handleGetRepositoryData,
+  handleCreateIssueInRepository,
+};

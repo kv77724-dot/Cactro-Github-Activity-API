@@ -32,4 +32,26 @@ const githubRepositoryData = async (req, res) => {
   }
 };
 
-module.exports = { githubUserAndRepositoriesData, githubRepositoryData };
+const createIssueInRepository = async (req, res) => {
+  try {
+    const data = await githubService.handleCreateIssueInRepository(
+      req.body,
+      req.params,
+      req.query
+    );
+    successResponse(res, "Issue created Successfully!", data, 200);
+  } catch (error) {
+    errorResponse(
+      res,
+      error.message || "Repository does not exist",
+      error.code,
+      error.status || 500
+    );
+  }
+};
+
+module.exports = {
+  githubUserAndRepositoriesData,
+  githubRepositoryData,
+  createIssueInRepository,
+};
