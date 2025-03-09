@@ -2,10 +2,18 @@ const Joi = require("joi");
 
 const usernameSchema = Joi.object({
   username: Joi.string()
-    .pattern(/^[a-zA-Z0-9-_]+$/) // Allows letters, numbers, hyphens, and underscores
-    .min(3) // At least 3 characters
-    .max(30) // At most 30 characters
+    .pattern(/^[a-zA-Z0-9-_]+$/)
+    .min(3)
+    .max(30)
     .required(),
 });
 
-module.exports = { usernameSchema };
+const repoSchema = Joi.object({
+  repoName: Joi.string()
+    .pattern(/^[a-zA-Z0-9-_]+$/)
+    .min(1)
+    .max(100)
+    .required(),
+});
+
+module.exports = { usernameSchema, repoSchema };
