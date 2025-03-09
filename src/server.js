@@ -4,6 +4,7 @@ const app = express();
 const port = 3000;
 const { successResponse } = require("./config/responseHandler");
 const { default: rateLimit } = require("express-rate-limit");
+const { default: axios } = require("axios");
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
@@ -30,6 +31,4 @@ app.use(express.urlencoded({ extended: false }));
 
 app.use(express.json());
 
-app.get("/user", (req, res) => {
-  successResponse(res, `This is user ${req.user.id}`, {}, 200);
-});
+app.use("/github", require("./routes/github"));
